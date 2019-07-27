@@ -1,0 +1,73 @@
+boardReady
+ property
+  board 僅限Smart板子 → string [smart]
+  device Device ID → string
+  transport 傳輸協定 → string [mqtt]
+  multi 讓多人同時操控 → true/false
+
+board
+ function
+  systemReset() 裝置在第一次連線的時間，所以腳位輸出預設低電位(0、off)
+ property
+  samplingInterval 類比腳位取樣時間
+
+getDht(board, pin)
+ board 哪個板子
+ pin 第幾腳位
+ function
+  read(function(evt){}, time)
+   time -> 每time/1000秒擷取一次
+ property
+  temperature
+  humidity
+
+google表單
+ myData={};
+ myData.sheetUrl = 'google https 網址'
+ myData.sheetName = '儲存哪個工作表';
+ myData.column0 = ''
+ myData.column1 = '' N表示數字
+ myData.columnN = ''
+ 
+writeSheetData(d)
+ d -> 把資料寫入到指定的google表單
+  sheetUrl -> google https 網址
+  sheetName -> 儲存哪個工作表
+  columnN -> N表示數字
+
+readSheetData(d, callback)
+ d -> 從google表單中讀取資料
+  sheetUrl -> google https 網址
+  sheetName -> 讀取哪個工作表
+  row -> 縱列
+  col -> 橫欄
+callback -> 執行函數
+ function(googleSheetReadData)
+  googleSheetReadData -> 讀取到的資料 
+
+Date
+ function
+  getHours() -> 獲得目前小時
+  getMinutes() -> 獲得目前分鐘
+  getSeconds() -> 獲得目前秒
+
+Google表單地址：https://docs.google.com/spreadsheets/d/10DfdNFOHHZ92VKgzIOpd5UIAS2LAtIGZbyU5W61In9w/edit#gid=0
+
+馬克一號/Fly
+boardReady('Device ID', function(board) {
+  board.systemReset();
+  board.samplingInterval = 50;
+});
+
+boardReady({device: 'Device ID', multi: true}, function(board) {
+  board.systemReset();
+  board.samplingInterval = 50;
+});
+
+Smart
+boardReady({board: 'Smart', device: 'Device ID', transport: 'mqtt'}, function(board) {
+  board.systemReset();
+  board.samplingInterval = 50;
+});
+
+document.getElementById('Element ID').addEventListener('事件[click]', function(){});
