@@ -1,4 +1,4 @@
-var name = "Value";
+/*var name = "Value";
 
 var value = 25;
 
@@ -242,4 +242,4 @@ chart.append("circle")
     ;
   
   
-})();
+})();*/

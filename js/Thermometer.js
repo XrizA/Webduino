@@ -4,9 +4,10 @@ var fan;
 var width = 300,
     height = 330,
     maxTemp = 50,
-    minTemp = 0,
+    minTemp = 5,
+    prevTemp = 0,
     currentTemp = 0
-    currentHum = 0;
+currentHum = 0;
 
 var bottomY = height - 5,
     topY = 5,
@@ -156,7 +157,7 @@ svg.append("circle")
     .style("stroke", mercuryColor)
     .style("stroke-width", "2px");
 
-var tickValues = d3.range((domain[1] - domain[0]) / step + 1).map(function (v) { return domain[0] + v * step; });
+var tickValues = d3.range((domain[1] - domain[0]) / step + 1).map(v => domain[0] + v * step);
 
 var axis = d3.axisLeft()
     .scale(scale)
@@ -191,7 +192,7 @@ var svgText = svg.append("text")
     .style("fill", "#FFFFFF")
     .style("font-size", "17px")
 
-boardReady({ device: 'EVGpX', multi: true }, function (board) {
+/*boardReady({ device: 'EVGpX', multi: true }, function (board) {
     board.systemReset();
     board.samplingInterval = 100;
     dht = getDht(board, 8);
@@ -201,11 +202,10 @@ boardReady({ device: 'EVGpX', multi: true }, function (board) {
         currentTemp = dht.temperature;
         currentHum = dht.humidity;
         tubeFill_top = scale(currentTemp);
-        var rectLine = $("#rectLine");
+        var rectLine = d3.select("#rectLine");
         var tempText = $("#tempText");
         var colorTemp = currentTemp <= minTemp ? "rgb(0, 0, 255)" : currentTemp >= maxTemp ? "rgb(255, 0, 0)" : "rgb(18, 85, 1)";
         // rectLine
-        rectLine.attr("y", tubeFill_top);
         rectLine.attr("height", tubeFill_bottom - tubeFill_top);
         rectLine.attr("style", "fill: " + colorTemp);
         // bulbGradient
@@ -217,8 +217,41 @@ boardReady({ device: 'EVGpX', multi: true }, function (board) {
         tempText.text(currentTemp + "°C");
         fan.write(currentTemp > 75 ? 1 : 0);
         // humidity
-        
-        /*document.getElementById("demo-area-01-show").innerHTML =
-            (['濕度：', dht.humidity, '%']).join('');*/
+
     }, 1000);
-});
+});*/
+
+
+$(function () {
+    let i = 0;
+    function read() {
+        prevTemp = currentTemp;
+        currentTemp = parseInt(Math.random() * 55);
+        if (i > 2) i = 0;
+        tubeFill_top = scale(currentTemp);
+        var rectLine = d3.select("#rectLine");
+        var tempText = d3.select("#tempText");
+        var colorTemp = currentTemp <= minTemp ? "rgb(0, 0, 255)" : currentTemp >= maxTemp ? "rgb(255, 0, 0)" : "rgb(18, 85, 1)";
+        // rectLine
+        rectLine.transition()
+            .duration(500)
+            .attr("y", tubeFill_top)
+            .attr("height", tubeFill_bottom - tubeFill_top)
+            .attr("style", "fill: " + colorTemp);
+        // bulbGradient
+        bulbGradient.selectAll("stop")
+            .filter(":not(:first-child)")
+            .transition()
+            .style("stop-color", colorTemp);
+        // tempText
+        tempText.attr("x", currentTemp < 10 ? 137.5 : 132.5);
+        tempText.transition()
+            .duration(500)
+            .tween("number", function () {
+                var i = d3.interpolateRound(prevTemp, currentTemp);
+                return t => this.textContent = i(t) + "°C"
+            });
+    }
+    setInterval(read, 1000);
+
+})
