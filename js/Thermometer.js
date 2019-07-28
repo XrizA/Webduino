@@ -1,8 +1,12 @@
+var dht; // 溫度&濕度
+var fan;
+
 var width = 300,
     height = 330,
-    maxTemp = 40,
-    minTemp = 5,
-    currentTemp = 0;
+    maxTemp = 50,
+    minTemp = 0,
+    currentTemp = 0
+    currentHum = 0;
 
 var bottomY = height - 5,
     topY = 5,
@@ -187,9 +191,15 @@ var svgText = svg.append("text")
     .style("fill", "#FFFFFF")
     .style("font-size", "17px")
 
-$(function () {
-    function read() {
-        currentTemp = parseInt(Math.random() * 45);
+boardReady({ device: 'EVGpX', multi: true }, function (board) {
+    board.systemReset();
+    board.samplingInterval = 100;
+    dht = getDht(board, 8);
+    fan = getPin(board, 9);
+    fan.setMode(3);
+    dht.read(function (evt) {
+        currentTemp = dht.temperature;
+        currentHum = dht.humidity;
         tubeFill_top = scale(currentTemp);
         var rectLine = $("#rectLine");
         var tempText = $("#tempText");
@@ -205,7 +215,10 @@ $(function () {
         // tempText
         tempText.attr("x", currentTemp < 10 ? 137.5 : 132.5);
         tempText.text(currentTemp + "°C");
-    }
-    setInterval(read, 1000);
+        fan.write(currentTemp > 75 ? 1 : 0);
+        // humidity
+        
+        /*document.getElementById("demo-area-01-show").innerHTML =
+            (['濕度：', dht.humidity, '%']).join('');*/
+    }, 1000);
 });
-

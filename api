@@ -71,3 +71,22 @@ boardReady({board: 'Smart', device: 'Device ID', transport: 'mqtt'}, function(bo
 });
 
 document.getElementById('Element ID').addEventListener('事件[click]', function(){});
+
+全速 1.238
+濕度 > 60
+
+(async function () {
+
+var pin;
+
+
+boardReady({device: 'EVGpX'}, async function (board) {
+  board.systemReset();
+  board.samplingInterval = 250;
+  pin = getPin({transport: 'mqtt', device: 'EVGpX'}, 11);
+  pin.setMode(3);
+  pin.write(0);
+  document.getElementById("demo-area-01-show").innerHTML = (await pin.read());
+});
+
+}());

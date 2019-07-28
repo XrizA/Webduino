@@ -1,3 +1,12 @@
-body {
-    background-color: rgb(18, 85, 1);
+div {
+    float: left;
+}
+
+.chart-first {
+    fill: #66AB8C;
+}
+
+.chart-second
+{
+    fill: #ff533d;
 }
