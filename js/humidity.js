@@ -112,7 +112,8 @@ var needleClient;
             .attr("transform", "translate(" + trX + ", " + trY + ")")
             .attr("font-size", 18)
             .attr("font-weight", "bold")
-        clearTimeout(displayValue)
+        //value = parseInt((Math.random() * 101));
+        //clearTimeout(displayValue)
     }
 
     texts.append("text")
@@ -143,7 +144,6 @@ var needleClient;
         .style("fill", "#fffff");
 
     var Needle = (function () {
-
         var recalcPointerPos = function (perc) {
             var centerX, centerY, leftX, leftY, rightX, rightY, thetaRad, topX, topY;
             thetaRad = percToRad(perc / 2);
@@ -223,6 +223,6 @@ var needleClient;
     needle.render();
     needle.moveTo(percent);
 
-    setTimeout(displayValue, 1000);
+    //setInterval(displayValue, 1000);
 
 })();
