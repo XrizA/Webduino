@@ -7,7 +7,7 @@ boardReady
 
 board
  function
-  systemReset() 裝置在第一次連線的時間，所以腳位輸出預設低電位(0、off)
+  systemReset() 裝置在第一次連線的時間，所有腳位輸出預設低電位(0、off)
  property
   samplingInterval 類比腳位取樣時間
 

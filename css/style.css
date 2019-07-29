@@ -1,0 +1,27 @@
+div {
+    float: left;
+}
+
+#thermo {
+    margin: 30px auto;
+}
+
+#humidity {
+    width: 400px;
+    margin: 70px auto;
+}
+
+.chart-first { fill: #9FBD35; }
+.chart-second { fill: #f2ba3a; }
+.chart-third { fill: #fb3033; }
+
+.needle, .needle-center { fill: #000000; }
+
+.text {
+    color: #112864;
+    font-size: 16px;
+}
+
+svg {
+    font: 10px sans-serif;
+}

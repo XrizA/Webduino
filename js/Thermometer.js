@@ -1,242 +1,231 @@
-var dht; // 溫度&濕度
-var fan;
+class Thermometer {
+    svgRoot;
+    maxTemp = 50;
+    minTemp = 10;
+    currentTemp = 0;
+    prevTemp = 0;
+    tubeFill_bottom = 0;
+    tubeBorderColor = "#999";
+    tubeBorderWidth = 2;
+    mercuryColor = "rgb(0, 0, 0)";
+    bulb_cy;
+    bulbRadius = 30;
+    top_cy;
+    domain;
+    scale;
 
-var width = 300,
-    height = 330,
-    maxTemp = 50,
-    minTemp = 5,
-    prevTemp = 0,
-    currentTemp = 0
-currentHum = 0;
+    set width(w) {
+        this.svgRoot.attr("width", this._width = (w != undefined) ? w : this._width);
+    }
 
-var bottomY = height - 5,
-    topY = 5,
-    bulbRadius = 30,
-    tubeWidth = 30,
-    tubeBorderWidth = 2,
-    mercuryColor = "rgb(0, 0, 0)",
-    innerBulbColor = "rgb(230, 200, 200)"
-tubeBorderColor = "#999999";
+    set height(h) {
+        this.svgRoot.attr("height", this._height = (h != undefined) ? h + 20 : this._height);
+    }
 
-var bulb_cy = bottomY - bulbRadius,
-    bulb_cx = width / 2,
-    top_cy = topY + tubeWidth / 2;
+    constructor(root, width, height) {
+        this._width = width != undefined ? width : 300;
+        this._height = height != undefined ? height : 330;
 
-var svg = d3.select("#thermo")
-    .append("svg")
-    .attr("width", width)
-    .attr("height", height);
+        var bottomY = this._height - 5,
+            topY = 5,
+            tubeWidth = 30;
 
-var defs = svg.append("defs");
+        this.bulb_cy = bottomY - this.bulbRadius;
 
-var bulbGradient = defs.append("radialGradient")
-    .attr("id", "bulbGradient")
-    .attr("cx", ".3")
-    .attr("cy", ".3")
-    .attr("r", ".7");
+        var bulb_cx = this._width / 2;
 
-bulbGradient.append("stop")
-    .attr("offset", "0%")
-    .style("stop-color", "#fff");
+        this.top_cy = topY + tubeWidth / 2
 
-bulbGradient.append("stop")
-    .attr("offset", "30%")
-    .style("stop-color", "rgb(0, 0, 255)");
+        this.svgRoot = d3.select(root)
+            .append("svg")
+            .attr("width", this._width)
+            .attr("height", this._height + 20);
 
-bulbGradient.append("stop")
-    .attr("offset", "70%")
-    .style("stop-color", "rgb(0, 0, 255)");
+        var defs = this.svgRoot.append("defs");
 
-bulbGradient.append("stop")
-    .attr("offset", "100%")
-    .style("stop-color", "rgb(0, 0, 255)");
+        var bulbGradient = defs.append("radialGradient")
+            .attr("id", "bulbGradient")
+            .attr("cx", ".3")
+            .attr("cy", ".3")
+            .attr("r", ".7");
 
-svg.append("circle")
-    .attr("r", tubeWidth / 2)
-    .attr("cx", width / 2)
-    .attr("cy", top_cy)
-    .style("fill", "#FFFFFF")
-    .style("stroke", tubeBorderColor)
-    .style("stroke-width", tubeBorderWidth + "px");
+        bulbGradient.append("stop")
+            .attr("offset", "0%")
+            .style("stop-color", "#fff");
 
-svg.append("rect")
-    .attr("x", width / 2 - tubeWidth / 2)
-    .attr("y", top_cy)
-    .attr("height", bulb_cy - top_cy)
-    .attr("width", tubeWidth)
-    .style("shape-rendering", "crispEdges")
-    .style("fill", "#FFFFFF")
-    .style("stroke", tubeBorderColor)
-    .style("stroke-width", tubeBorderWidth + "px");
+        bulbGradient.append("stop")
+            .attr("offset", "30%")
+            .style("stop-color", "rgb(0, 0, 255)");
 
-svg.append("circle")
-    .attr("r", tubeWidth / 2 - tubeBorderWidth / 2)
-    .attr("cx", width / 2)
-    .attr("cy", top_cy)
-    .style("fill", "#FFFFFF")
-    .style("stroke", "none")
+        bulbGradient.append("stop")
+            .attr("offset", "70%")
+            .style("stop-color", "rgb(0, 0, 255)");
 
-svg.append("circle")
-    .attr("r", bulbRadius)
-    .attr("cx", bulb_cx)
-    .attr("cy", bulb_cy)
-    .style("fill", "#FFFFFF")
-    .style("stroke", tubeBorderColor)
-    .style("stroke-width", tubeBorderWidth + "px");
+        bulbGradient.append("stop")
+            .attr("offset", "100%")
+            .style("stop-color", "rgb(0, 0, 255)");
 
-svg.append("rect")
-    .attr("x", width / 2 - (tubeWidth - tubeBorderWidth) / 2)
-    .attr("y", top_cy)
-    .attr("height", bulb_cy - top_cy)
-    .attr("width", tubeWidth - tubeBorderWidth)
-    .style("shape-rendering", "crispEdges")
-    .style("fill", "#FFFFFF")
-    .style("stroke", "none");
+        this.svgRoot.append("circle")
+            .attr("r", tubeWidth / 2)
+            .attr("cx", this._width / 2)
+            .attr("cy", this.top_cy)
+            .style("fill", "#FFFFFF")
+            .style("stroke", this.tubeBorderColor)
+            .style("stroke-width", this.tubeBorderWidth + "px");
 
-var step = 5;
+        this.svgRoot.append("rect")
+            .attr("x", this._width / 2 - tubeWidth / 2)
+            .attr("y", this.top_cy)
+            .attr("height", this.bulb_cy - this.top_cy)
+            .attr("width", tubeWidth)
+            .style("shape-rendering", "crispEdges")
+            .style("fill", "#FFFFFF")
+            .style("stroke", this.tubeBorderColor)
+            .style("stroke-width", this.tubeBorderWidth + "px");
 
-var domain = [
-    step * Math.floor(minTemp / step),
-    step * Math.ceil(maxTemp / step)
-];
+        this.svgRoot.append("circle")
+            .attr("r", tubeWidth / 2 - this.tubeBorderWidth / 2)
+            .attr("cx", this._width / 2)
+            .attr("cy", this.top_cy)
+            .style("fill", "#FFFFFF");
 
-if (minTemp - domain[0] < 0.66 * step)
-    domain[0] -= step;
+        this.svgRoot.append("circle")
+            .attr("r", this.bulbRadius)
+            .attr("cx", bulb_cx)
+            .attr("cy", this.bulb_cy)
+            .style("stroke", this.tubeBorderColor)
+            .style("stroke-width", this.tubeBorderWidth + "px");
 
-if (domain[1] - maxTemp < 0.66 * step)
-    domain[1] += step;
+        this.svgRoot.append("rect")
+            .attr("x", this._width / 2 - (tubeWidth - this.tubeBorderWidth) / 2)
+            .attr("y", this.top_cy)
+            .attr("width", tubeWidth - this.tubeBorderWidth)
+            .attr("height", this.bulb_cy - this.top_cy)
+            .style("shape-rendering", "crispEdges")
+            .style("fill", "#FFFFFF");
 
-var scale = d3.scaleLinear()
-    .range([bulb_cy - bulbRadius / 2 - 15.5, top_cy])
-    .domain(domain);
+        var step = 5;
 
-[minTemp, maxTemp].forEach(function (t) {
+        this.domain = [
+            step * Math.floor(this.minTemp / step),
+            step * Math.ceil(this.maxTemp / step)
+        ];
 
-    var isMax = (t == maxTemp),
-        label = (isMax ? "max" : "min"),
-        textCol = (isMax ? "rgb(230, 0, 0)" : "rgb(0, 0, 230)"),
-        textOffset = (isMax ? -4 : 4);
+        if (this.minTemp - this.domain[0] < 0.66 * step) this.domain[0] -= step;
 
-    svg.append("line")
-        .attr("id", label + "Line")
-        .attr("x1", width / 2 - tubeWidth / 2)
-        .attr("x2", width / 2 + tubeWidth / 2 + 45)
-        .attr("y1", scale(t))
-        .attr("y2", scale(t))
-        .style("stroke", tubeBorderColor)
-        .style("stroke-width", "1px")
-        .style("shape-rendering", "crispEdges");
+        if (this.domain[1] - this.maxTemp < 0.66 * step) this.domain[1] += step;
 
-    svg.append("text")
-        .attr("x", width / 2 + tubeWidth / 2 + 2)
-        .attr("y", scale(t) + textOffset)
-        .attr("dy", isMax ? null : "0.75em")
-        .text(label)
-        .style("fill", textCol)
-        .style("font-size", "25px")
+        this.scale = d3.scaleLinear()
+            .range([this.bulb_cy - this.bulbRadius / 2 - 15.5, this.top_cy])
+            .domain(this.domain);
 
-});
+        [this.minTemp, this.maxTemp].forEach((t) => {
+            var isMax = (t == this.maxTemp),
+                label = (isMax ? "max" : "min"),
+                textCol = (isMax ? "rgb(230, 0, 0)" : "rgb(0, 0, 230)"),
+                textOffset = (isMax ? -4 : 4);
 
-var tubeFill_bottom = bulb_cy,
-    tubeFill_top = scale(currentTemp);
+            this.svgRoot.append("line")
+                .attr("id", label + "Line")
+                .attr("x1", this._width / 2 - tubeWidth / 2)
+                .attr("x2", this._width / 2 + tubeWidth / 2 + 45)
+                .attr("y1", this.scale(t))
+                .attr("y2", this.scale(t))
+                .style("stroke", this.tubeBorderColor)
+                .style("stroke-width", "1px")
+                .style("shape-rendering", "crispEdges");
 
-svg.append("rect")
-    .attr("id", "rectLine")
-    .attr("x", width / 2 - (tubeWidth - 10) / 2)
-    .attr("y", tubeFill_top)
-    .attr("width", tubeWidth - 10)
-    .attr("height", tubeFill_bottom - tubeFill_top)
-    .style("shape-rendering", "crispEdges")
-    .style("fill", "rgb(0,0,255)");
+            this.svgRoot.append("text")
+                .attr("x", this._width / 2 + tubeWidth / 2 + 2)
+                .attr("y", this.scale(t) + textOffset)
+                .attr("dy", isMax ? null : "0.75em")
+                .text(label)
+                .style("fill", textCol)
+                .style("font-size", "25px")
+        });
 
-svg.append("circle")
-    .attr("r", bulbRadius - 3)
-    .attr("cx", bulb_cx)
-    .attr("cy", bulb_cy)
-    .style("fill", "url(#bulbGradient)")
-    .style("stroke", mercuryColor)
-    .style("stroke-width", "2px");
+        this.tubeFill_bottom = this.bulb_cy;
 
-var tickValues = d3.range((domain[1] - domain[0]) / step + 1).map(v => domain[0] + v * step);
+        var tubeFill_top = this.scale(this.currentTemp);
 
-var axis = d3.axisLeft()
-    .scale(scale)
-    .tickSizeInner(7)
-    .tickSizeOuter(0)
-    .tickValues(tickValues);
+        this.svgRoot.append("rect")
+            .attr("id", "rectLine")
+            .attr("x", this._width / 2 - (tubeWidth - 10) / 2)
+            .attr("y", tubeFill_top)
+            .attr("width", tubeWidth - 10)
+            .attr("height", this.tubeFill_bottom - tubeFill_top)
+            .style("shape-rendering", "crispEdges")
+            .style("fill", "rgb(0, 0, 255)");
 
-var svgAxis = svg.append("g")
-    .attr("id", "tempScale")
-    .attr("transform", "translate(" + (width / 2 - tubeWidth / 2) + ",0)")
-    .call(axis);
+        this.svgRoot.append("circle")
+            .attr("r", this.bulbRadius - 3)
+            .attr("cx", bulb_cx)
+            .attr("cy", this.bulb_cy)
+            .style("fill", "url(#bulbGradient)")
+            .style("stroke", this.mercuryColor)
+            .style("stroke-width", "2px");
 
-svgAxis.selectAll(".tick text")
-    .style("fill", "#777777")
-    .style("font-size", "20px");
+        var tickValues = d3.range((this.domain[1] - this.domain[0]) / step + 1)
+            .map(v => this.domain[0] + v * step);
 
-svgAxis.select("path")
-    .style("stroke", "none")
-    .style("fill", "none")
+        var axis = d3.axisLeft()
+            .scale(this.scale)
+            .tickSizeInner(7)
+            .tickSizeOuter(0)
+            .tickValues(tickValues);
 
-svgAxis.selectAll(".tick line")
-    .style("stroke", tubeBorderColor)
-    .style("shape-rendering", "crispEdges")
-    .style("stroke-width", "1px")
+        var svgAxis = this.svgRoot.append("g")
+            .attr("id", "tempScale")
+            .attr("transform", "translate(" + (this._width / 2 - tubeWidth / 2) + ",0)")
+            .call(axis);
 
-var svgText = svg.append("text")
-    .attr("id", "tempText")
-    .attr("x", 137.5)
-    .attr("y", 288.5)
-    .attr("dy", "0.75em")
-    .text(currentTemp + "°C")
-    .style("fill", "#FFFFFF")
-    .style("font-size", "17px")
+        svgAxis.selectAll(".tick text")
+            .style("fill", "#777777")
+            .style("font-size", "20px");
 
-/*boardReady({ device: 'EVGpX', multi: true }, function (board) {
-    board.systemReset();
-    board.samplingInterval = 100;
-    dht = getDht(board, 8);
-    fan = getPin(board, 9);
-    fan.setMode(3);
-    dht.read(function (evt) {
-        currentTemp = dht.temperature;
-        currentHum = dht.humidity;
-        tubeFill_top = scale(currentTemp);
-        var rectLine = d3.select("#rectLine");
-        var tempText = $("#tempText");
-        var colorTemp = currentTemp <= minTemp ? "rgb(0, 0, 255)" : currentTemp >= maxTemp ? "rgb(255, 0, 0)" : "rgb(18, 85, 1)";
-        // rectLine
-        rectLine.attr("height", tubeFill_bottom - tubeFill_top);
-        rectLine.attr("style", "fill: " + colorTemp);
-        // bulbGradient
-        bulbGradient.selectAll("stop")
-            .style("stop-color", colorTemp);
-        bulbGradient.selectAll("stop")._groups[0][0].style["stopColor"] = "#fff"
-        // tempText
-        tempText.attr("x", currentTemp < 10 ? 137.5 : 132.5);
-        tempText.text(currentTemp + "°C");
-        fan.write(currentTemp > 75 ? 1 : 0);
-        // humidity
+        svgAxis.select("path")
+            .style("stroke", "none")
+            .style("fill", "none")
 
-    }, 1000);
-});*/
+        svgAxis.selectAll(".tick line")
+            .style("stroke", this.tubeBorderColor)
+            .style("shape-rendering", "crispEdges")
+            .style("stroke-width", "1px")
+
+        this.svgRoot.append("text")
+            .attr("id", "tempText")
+            .attr("x", 137.5)
+            .attr("y", 288.5)
+            .attr("dy", "0.75em")
+            .attr("font-weight", "bold")
+            .text(this.currentTemp + "°C")
+            .style("fill", "#FFFFFF")
+            .style("font-size", "17px")
+
+        this.svgRoot.append("text")
+            .attr("x", 132.5)
+            .attr("y", 330)
+            .attr("dy", "0.75em")
+            .attr("font-weight", "bold")
+            .text("溫度")
+            .style("font-size", "17px");
+    }
 
 
-$(function () {
-    let i = 0;
-    function read() {
-        prevTemp = currentTemp;
-        currentTemp = parseInt(Math.random() * 55);
-        if (i > 2) i = 0;
-        tubeFill_top = scale(currentTemp);
+
+    Update(temperature) {
+        this.prevTemp = this.currentTemp;
+        this.currentTemp = temperature;
+        var tubeFill_top = this.scale(this.currentTemp);
         var rectLine = d3.select("#rectLine");
         var tempText = d3.select("#tempText");
-        var colorTemp = currentTemp <= minTemp ? "rgb(0, 0, 255)" : currentTemp >= maxTemp ? "rgb(255, 0, 0)" : "rgb(18, 85, 1)";
+        var bulbGradient = d3.select("#bulbGradient");
+        var colorTemp = this.currentTemp <= this.minTemp ? "rgb(0, 0, 255)" : this.currentTemp >= this.maxTemp ? "rgb(255, 0, 0)" : "rgb(18, 85, 1)";
         // rectLine
         rectLine.transition()
-            .duration(500)
+            .duration(1000)
             .attr("y", tubeFill_top)
-            .attr("height", tubeFill_bottom - tubeFill_top)
+            .attr("height", this.tubeFill_bottom - tubeFill_top)
             .attr("style", "fill: " + colorTemp);
         // bulbGradient
         bulbGradient.selectAll("stop")
@@ -244,14 +233,17 @@ $(function () {
             .transition()
             .style("stop-color", colorTemp);
         // tempText
-        tempText.attr("x", currentTemp < 10 ? 137.5 : 132.5);
+        tempText.attr("x", this.currentTemp < 10 ? 137.5 : 132.5);
         tempText.transition()
-            .duration(500)
-            .tween("number", function () {
-                var i = d3.interpolateRound(prevTemp, currentTemp);
-                return t => this.textContent = i(t) + "°C"
+            .duration(1000)
+            .tween("number", () => {
+                //this.prevTemp
+                var i = d3.interpolateRound(this.prevTemp, this.currentTemp);
+                return t => tempText.text(i(t) + "°C");
             });
     }
-    setInterval(read, 1000);
+}
 
-})
+/*var t = new Thermometer("#thermo");
+t.Update(parseInt(Math.random() * 55));
+console.log(t);*/
