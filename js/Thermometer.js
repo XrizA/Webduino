@@ -203,11 +203,11 @@ class Thermometer {
             .style("font-size", "17px")
 
         this.svgRoot.append("text")
-            .attr("x", 132.5)
+            .attr("x", 124)
             .attr("y", 330)
             .attr("dy", "0.75em")
             .attr("font-weight", "bold")
-            .text("溫度")
+            .text("溫度計")
             .style("font-size", "17px");
     }
 

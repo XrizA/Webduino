@@ -1,6 +1,6 @@
 class Humidity {
     svgRoot;
-    name = "濕度";
+    name = "溼度計";
     prevValue = 0;
     value = 0;
     gaugeMaxValue = 100;
@@ -92,8 +92,8 @@ class Humidity {
         texts.append("text")
             .text(() => dataset[0].metric)
             .attr("id", "Name")
-            .attr("transform", "translate(" + ((this.width + margin.left) / 2.35) + ", " +
-                ((height + margin.top) / 1.5) + ")")
+            .attr("transform", "translate(" + ((this.width + margin.left) / 2.5) + ", " +
+                ((height + margin.top) / 1.4) + ")")
             .attr("font-weight", "bold")
             .attr("font-size", 25);
 
@@ -161,7 +161,7 @@ class Humidity {
             .attr("d", humidity.recalcPointerPos.call(this, 0));
     }
 
-    moveTo = (perc) => {
+    Update = (perc) => {
         var oldValue = this.perc || 0;
         
         var humidityValue = d3.select("#Value");
