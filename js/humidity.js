@@ -1,7 +1,8 @@
 class Humidity {
     svgRoot;
     name = "濕度";
-    value = 30;
+    prevValue = 0;
+    value = 0;
     gaugeMaxValue = 100;
     chart;
     width;
@@ -161,14 +162,16 @@ class Humidity {
     }
 
     moveTo = (perc) => {
-
         var oldValue = this.perc || 0;
+        
         var humidityValue = d3.select("#Value");
 
+        this.prevValue = this.value;
         this.value = perc;
-        perc /= 100;
-        this.perc = perc;
+        this.perc = perc = perc / 100;
 
+        if (this.prevValue == this.value) return;
+        
         this.chart
             .transition()
             .delay(100)
@@ -195,7 +198,6 @@ class Humidity {
                 return function (percentOfPercent) {
                     var progress = percentOfPercent * perc;
                     humidity.repaintGauge(progress);
-
                     return needle.attr('d', humidity.recalcPointerPos.call(this, progress));
                 }
             });
@@ -203,7 +205,7 @@ class Humidity {
         humidityValue.transition()
             .duration(1000)
             .tween("number", () => {
-                var i = d3.interpolateRound(0, this.value);
+                var i = d3.interpolateRound(this.prevValue, this.value);
                 return t => humidityValue.text(i(t) + "°C");
             });
     };
