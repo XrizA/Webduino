@@ -211,9 +211,7 @@ class Thermometer {
             .style("font-size", "17px");
     }
 
-
-
-    Update(temperature) {
+    Update = (temperature) => {
         this.prevTemp = this.currentTemp;
         this.currentTemp = temperature;
         var tubeFill_top = this.scale(this.currentTemp);
@@ -237,13 +235,8 @@ class Thermometer {
         tempText.transition()
             .duration(1000)
             .tween("number", () => {
-                //this.prevTemp
                 var i = d3.interpolateRound(this.prevTemp, this.currentTemp);
                 return t => tempText.text(i(t) + "°C");
             });
     }
 }
-
-/*var t = new Thermometer("#thermo");
-t.Update(parseInt(Math.random() * 55));
-console.log(t);*/

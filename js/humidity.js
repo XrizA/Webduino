@@ -1,22 +1,17 @@
-class humidity {
+class Humidity {
     svgRoot;
     name = "濕度";
-    value = 50;
+    value = 30;
     gaugeMaxValue = 100;
     chart;
     width;
-    percentValue;
-    percent;
+    totalPercent;
     static repaintGauge;
-    static percToRad;
+    static recalcPointerPos
     constructor(root) {
         var margin, height, radius, barWidth, chartInset,
-            arc3, arc2, arc1, totalPercent, padRad, percent;
-        var degToRad, percToDeg;
-
-        this.percentValue = this.value / this.gaugeMaxValue;
-
-        this.percent = this.percentValue;
+            arc3, arc2, arc1, padRad;
+        var degToRad, percToDeg, percToRad;
 
         this.svgRoot = d3.select(root);
 
@@ -29,13 +24,16 @@ class humidity {
         padRad = 0.025;
         chartInset = 10;
 
-        totalPercent = .75;
+        this.len = this.width / 2.5;
+        this.radius = this.len / 8;
+
+        this.totalPercent = .75;
 
         percToDeg = perc => perc * 360;
 
-        degToRad = deg => deg * Math.PI / 180;
+        percToRad = perc => degToRad(percToDeg(perc));
 
-        humidity.percToRad = perc => degToRad(percToDeg(perc));
+        degToRad = deg => deg * Math.PI / 180;
 
         this.svgRoot = this.svgRoot.append("svg")
             .attr("width", this.width + margin.left + margin.right)
@@ -60,23 +58,22 @@ class humidity {
             .innerRadius(radius - chartInset - barWidth);
 
         humidity.repaintGauge = () => {
-            var perc = 0.5;
-            var next_start = totalPercent;
-            var arcStartRad = humidity.percToRad(next_start);
-            var arcEndRad = arcStartRad + humidity.percToRad(perc / 3);
+            var perc = .5;
+            var next_start = this.totalPercent;
+            var arcStartRad = percToRad(next_start);
+            var arcEndRad = arcStartRad + percToRad(perc / 3);
             next_start += perc / 3;
-
 
             arc1.startAngle(arcStartRad).endAngle(arcEndRad);
 
-            arcStartRad = humidity.percToRad(next_start);
-            arcEndRad = arcStartRad + humidity.percToRad(perc / 3);
+            arcStartRad = percToRad(next_start);
+            arcEndRad = arcStartRad + percToRad(perc / 3);
             next_start += perc / 3;
 
             arc2.startAngle(arcStartRad + padRad).endAngle(arcEndRad);
 
-            arcStartRad = humidity.percToRad(next_start);
-            arcEndRad = arcStartRad + humidity.percToRad(perc / 3);
+            arcStartRad = percToRad(next_start);
+            arcEndRad = arcStartRad + percToRad(perc / 3);
 
             arc3.startAngle(arcStartRad + padRad).endAngle(arcEndRad);
 
@@ -136,85 +133,78 @@ class humidity {
             .attr("font-size", 15)
             .attr("font-weight", "bold")
             .style("fill", "#fffff");
-    }
-};
 
-class Needle {
+        humidity.recalcPointerPos = (perc) => {
+            var centerX, centerY, leftX, leftY, rightX, rightY, thetaRad, topX, topY;
+            thetaRad = percToRad(perc / 2);
+            centerX = centerY = 0;
+            topX = centerX - this.len * Math.cos(thetaRad);
+            topY = centerY - this.len * Math.sin(thetaRad);
+            leftX = centerX - this.radius * Math.cos(thetaRad - Math.PI / 2);
+            leftY = centerY - this.radius * Math.sin(thetaRad - Math.PI / 2);
+            rightX = centerX - this.radius * Math.cos(thetaRad + Math.PI / 2);
+            rightY = centerY - this.radius * Math.sin(thetaRad + Math.PI / 2);
 
-    constructor(el, width) {
-        this.el = el;
-        this.len = width / 2.5;
-        this.radius = this.len / 8;
-    }
+            return "M " + leftX + " " + leftY + " L " + topX + " " + topY + " L " + rightX + " " + rightY;
+        };
 
-    recalcPointerPos = (perc) => {
-        var centerX, centerY, leftX, leftY, rightX, rightY, thetaRad, topX, topY;
-        thetaRad = humidity.percToRad(perc / 2);
-        centerX = centerY = 0;
-        topX = centerX - this.len * Math.cos(thetaRad);
-        topY = centerY - this.len * Math.sin(thetaRad);
-        leftX = centerX - this.radius * Math.cos(thetaRad - Math.PI / 2);
-        leftY = centerY - this.radius * Math.sin(thetaRad - Math.PI / 2);
-        rightX = centerX - this.radius * Math.cos(thetaRad + Math.PI / 2);
-        rightY = centerY - this.radius * Math.sin(thetaRad + Math.PI / 2);
-
-        return "M " + leftX + " " + leftY + " L " + topX + " " + topY + " L " + rightX + " " + rightY;
-    };
-
-    render() {
-        this.el.append("circle")
+        this.chart.append("circle")
             .attr("class", "needle-center")
             .attr("cx", 0)
             .attr("cy", 0)
             .attr("r", this.radius);
 
-        return this.el.append("path")
+        this.chart.append("path")
             .attr("class", "needle")
             .attr("id", "client-needle")
-            .attr("d", this.recalcPointerPos.call(this, 0));
-    };
+            .attr("d", humidity.recalcPointerPos.call(this, 0));
+    }
 
-    moveTo(perc) {
-        var self,
-            oldValue = this.perc || 0;
+    moveTo = (perc) => {
 
+        var oldValue = this.perc || 0;
+        var humidityValue = d3.select("#Value");
+
+        this.value = perc;
+        perc /= 100;
         this.perc = perc;
-        self = this;
 
-        this.el
+        this.chart
             .transition()
-            .delay(1000)
+            .delay(100)
             .ease(d3.easeQuad)
             .duration(200)
             .select(".needle")
-            .tween("reset-progress", () =>
-                (percentOfPercent) => {
+            .tween("reset-progress", function () {
+                var needle = d3.select(this);
+                return function (percentOfPercent) {
                     var progress = (1 - percentOfPercent) * oldValue;
                     humidity.repaintGauge(progress);
+                    return needle.attr("d", humidity.recalcPointerPos.call(this, progress));
+                }
+            });
 
-                    return d3.select(this)
-                        .attr("d", this.recalcPointerPos.call(self, progress));
-                });
-
-        this.el
+        this.chart
             .transition()
             .delay(300)
             .ease(d3.easeBounce)
-            .duration(1500)
+            .duration(500)
             .select(".needle")
-            .tween("progress", () =>
-                (percentOfPercent) => {
+            .tween("progress", function (d, i, e) {
+                var needle = d3.select(this);
+                return function (percentOfPercent) {
                     var progress = percentOfPercent * perc;
                     humidity.repaintGauge(progress);
-                    return d3.select(this)
-                        .attr("d", this.recalcPointerPos.call(self, progress));
+
+                    return needle.attr('d', humidity.recalcPointerPos.call(this, progress));
                 }
-            );
+            });
+
+        humidityValue.transition()
+            .duration(1000)
+            .tween("number", () => {
+                var i = d3.interpolateRound(0, this.value);
+                return t => humidityValue.text(i(t) + "°C");
+            });
     };
-
-}
-
-var h = new humidity("#humidity");
-var n = new Needle(h.chart, h.width);
-n.render();
-n.moveTo(h.percent);
+};
