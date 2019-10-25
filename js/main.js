@@ -9,7 +9,7 @@ const fanPinMode = 3; // 風扇腳位模式
     (device: "裝置ID", multi: true/false 是否讓裝置多人同時操控)
     (board) -> 板子資訊，裡面的board文字可隨意改變
 */
-boardReady({ device: "EVGpX", multi: true }, (board) => {
+/*boardReady({ device: "EVGpX", multi: true }, (board) => {
     board.systemReset(); // 裝置在第一次連線時，所有腳位輸出預設低電位 (0、off)
     board.samplingInterval = 100; // 類比取樣時間
     dht = getDht(board, dhtPin); // getDht(board, pin) -> 設定 溫溼度 為哪塊板子的幾號腳位
@@ -26,9 +26,9 @@ boardReady({ device: "EVGpX", multi: true }, (board) => {
         humidity.Update(currentHum); // 更新溼度計元件
         fan.write(currentTemp > 75 ? 1 : 0); // 當目前濕度達到75時，開啟風扇；否則關閉風扇
     }, 1000);
-});
+});*/
 
-/*$(() => {
+$(() => {
     const thermometer = new Thermometer("#thermo");
     const humidity = new Humidity("#humidity");
     setInterval(() => {
@@ -37,4 +37,4 @@ boardReady({ device: "EVGpX", multi: true }, (board) => {
         //humidity.Update(71);
         humidity.Update(parseInt(Math.random()*101))
     }, 1000);
-});*/
+});
